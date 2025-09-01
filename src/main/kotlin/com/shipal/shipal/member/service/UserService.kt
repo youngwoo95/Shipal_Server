@@ -33,7 +33,8 @@ class UserService (
             createDt = LocalDateTime.now(),
             createUser = "시스템관리자",
             updateDt = LocalDateTime.now(),
-            updateUser = "시스템관리자"
+            updateUser = "시스템관리자",
+            gender = "남"
         )
 
         userRepository.save(newUser)

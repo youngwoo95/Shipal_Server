@@ -2,6 +2,7 @@ package com.shipal.shipal.member.controller
 
 import com.shipal.shipal.common.dto.UserDtoRequest
 import com.shipal.shipal.member.service.UserService
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -15,7 +16,7 @@ class UserController(
 {
     /* 회원가입 */
     @PostMapping("/signUp")
-    fun signUp(@RequestBody userDtoRequest: UserDtoRequest) : String{
+    fun signUp(@RequestBody @Valid userDtoRequest: UserDtoRequest) : String{
         return userService.signUp(userDtoRequest)
     }
 }

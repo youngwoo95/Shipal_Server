@@ -60,5 +60,9 @@ class User(
     var delDt: LocalDateTime? = null,
 
     @Column(name = "DEL_USER", length = 255)
-    var delUesr: String? = null
+    var delUesr: String? = null,
+
+    @Column(name = "GENDER", length = 45)
+    var gender: String
+
 )
