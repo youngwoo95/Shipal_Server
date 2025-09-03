@@ -1,4 +1,4 @@
-package com.shipal.shipal.common.dto
+package com.shipal.shipal.user.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.shipal.shipal.common.annotation.ValidEnum

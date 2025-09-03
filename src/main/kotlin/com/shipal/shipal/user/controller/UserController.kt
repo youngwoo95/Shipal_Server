@@ -1,7 +1,7 @@
-package com.shipal.shipal.member.controller
+package com.shipal.shipal.user.controller
 
-import com.shipal.shipal.common.dto.UserDtoRequest
-import com.shipal.shipal.member.service.UserService
+import com.shipal.shipal.user.dto.UserDtoRequest
+import com.shipal.shipal.user.service.UserService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody

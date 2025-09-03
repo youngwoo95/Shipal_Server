@@ -1,8 +1,8 @@
-package com.shipal.shipal.member.service
+package com.shipal.shipal.user.service
 
-import com.shipal.shipal.common.dto.UserDtoRequest
-import com.shipal.shipal.member.entity.User
-import com.shipal.shipal.member.repository.UserRepository
+import com.shipal.shipal.user.dto.UserDtoRequest
+import com.shipal.shipal.user.entity.User
+import com.shipal.shipal.user.repository.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
