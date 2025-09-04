@@ -1,5 +1,6 @@
 package com.shipal.shipal.user.service
 
+import com.shipal.shipal.common.exception.InvalidInputException
 import com.shipal.shipal.user.dto.UserDtoRequest
 import com.shipal.shipal.user.entity.User
 import com.shipal.shipal.user.repository.UserRepository
@@ -16,12 +17,13 @@ class UserService (
     /* 회원가입 */
     fun signUp(userDtoRequest: UserDtoRequest ) : String{
         // ID 중복 검사
-        val user: User? = userRepository.findByLoginId(userDtoRequest.loginId)
+        var user: User? = userRepository.findByLoginId(userDtoRequest.loginId)
         if(user != null)
         {
-            return "이미 등록된 ID 입니다."
+            throw InvalidInputException("loginId","이미 등록된 ID 입니다.")
         }
 
+        /*
         var newUser = User(
             null,
             userDtoRequest.loginId,
@@ -36,8 +38,15 @@ class UserService (
             updateUser = "시스템관리자",
             gender = "남"
         )
+        */
 
-        userRepository.save(newUser)
+        user = userDtoRequest.toEntity()
+        user.createDt = LocalDateTime.now()
+        user.createUser ="시스템관리자"
+        user.updateDt = LocalDateTime.now()
+        user.updateUser = "시스템관리자"
+
+        userRepository.save(user)
 
         return "회원가입이 완료되었습니다."
     }

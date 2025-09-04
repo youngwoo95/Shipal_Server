@@ -39,17 +39,17 @@ class User(
     @Column(name = "NICKNAME", length = 255)
     var nickname: String? = null,
 
-    @Column(name = "CREATE_DT", nullable = false)
-    var createDt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "CREATE_DT")
+    var createDt: LocalDateTime? = null,
 
-    @Column(name = "CREATE_USER", nullable = false, length = 255)
-    var createUser: String,
+    @Column(name = "CREATE_USER", length = 255)
+    var createUser: String? = null,
 
-    @Column(name = "UPDATE_DT", nullable = false)
-    var updateDt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "UPDATE_DT")
+    var updateDt: LocalDateTime? = null,
 
-    @Column(name ="UPDATE_USER", nullable = false, length = 255)
-    var updateUser: String,
+    @Column(name ="UPDATE_USER", length = 255)
+    var updateUser: String? = null,
 
     /* 삭제 플래그 */
     @Column(name = "DEL_YN")

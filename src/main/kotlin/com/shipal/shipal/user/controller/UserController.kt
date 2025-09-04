@@ -1,5 +1,6 @@
 package com.shipal.shipal.user.controller
 
+import com.shipal.shipal.common.dto.BaseResponse
 import com.shipal.shipal.user.dto.UserDtoRequest
 import com.shipal.shipal.user.service.UserService
 import jakarta.validation.Valid
@@ -16,7 +17,8 @@ class UserController(
 {
     /* 회원가입 */
     @PostMapping("/signUp")
-    fun signUp(@RequestBody @Valid userDtoRequest: UserDtoRequest) : String{
-        return userService.signUp(userDtoRequest)
+    fun signUp(@RequestBody @Valid userDtoRequest: UserDtoRequest) : BaseResponse<Unit>{
+        var resultMsg: String = userService.signUp(userDtoRequest)
+        return BaseResponse(message = resultMsg)
     }
 }

@@ -3,6 +3,7 @@ package com.shipal.shipal.user.dto
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.shipal.shipal.common.annotation.ValidEnum
 import com.shipal.shipal.common.status.Gender
+import com.shipal.shipal.user.entity.User
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 
@@ -64,4 +65,15 @@ data class UserDtoRequest
 
     val gender: Gender
         get() = Gender.valueOf(_gender!!)
+
+    fun toEntity(): User =
+        User(
+            loginId = loginId,
+            loginPw =  loginPw,
+            phone =  phone,
+            name = name,
+            address = address,
+            nickname = nickName,
+            gender = gender.desc
+    )
 }
