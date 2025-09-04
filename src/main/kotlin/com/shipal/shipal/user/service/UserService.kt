@@ -23,23 +23,6 @@ class UserService (
             throw InvalidInputException("loginId","이미 등록된 ID 입니다.")
         }
 
-        /*
-        var newUser = User(
-            null,
-            userDtoRequest.loginId,
-            userDtoRequest.loginPw,
-            userDtoRequest.phone,
-            userDtoRequest.name,
-            userDtoRequest.address,
-            nickname = userDtoRequest.nickName,
-            createDt = LocalDateTime.now(),
-            createUser = "시스템관리자",
-            updateDt = LocalDateTime.now(),
-            updateUser = "시스템관리자",
-            gender = "남"
-        )
-        */
-
         user = userDtoRequest.toEntity()
         user.createDt = LocalDateTime.now()
         user.createUser ="시스템관리자"
