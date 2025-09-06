@@ -1,14 +1,18 @@
 package com.shipal.shipal
 
+import com.shipal.shipal.Service.comm.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
-class SecurityConfig {
+class SecurityConfig(
+    private val jwtAuthFilter: JwtAuthFilter
+) {
 
     @Bean
     fun securityFilterChain(http: HttpSecurity) : SecurityFilterChain{
@@ -19,14 +23,15 @@ class SecurityConfig {
             .authorizeHttpRequests {
                 // 회원가입은 무조건 허용
                 it.requestMatchers(HttpMethod.POST, "/api/v1/user/addUser").permitAll()
+                // 토큰 발급은 허용 (테스트/개발용)
+                it.requestMatchers(HttpMethod.POST, "/api/v1/user/login").permitAll()
 
-                // 개발 단계: 나머지도 일단 허용
-                it.anyRequest().permitAll()
-                // 운영에서 인증 걸 때만 ↓로 바꾸세요.
-                // it.anyRequest().authenticated()
+                // 그 외 요청은 인증 필요
+                it.anyRequest().authenticated()
             }
             .httpBasic { it.disable() }
             .formLogin { it.disable() }
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
 

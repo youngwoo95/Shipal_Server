@@ -31,3 +31,7 @@ logging:
         type.descriptor.sql: trace
 jwt:
   secret: DadFufN4Oui8Bfv3ScFj6R9fyJ9hD45E6AGFsXgFsRhT4YSdSb
+  issuer: shipalProject
+  access-exp-minutes: 30
+
+

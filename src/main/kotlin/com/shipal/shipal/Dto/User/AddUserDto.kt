@@ -1,8 +1,7 @@
-package com.shipal.shipal.Dto
+package com.shipal.shipal.Dto.User
 
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
-import org.hibernate.annotations.NotFound
 
 data class AddUserDto (
     /*

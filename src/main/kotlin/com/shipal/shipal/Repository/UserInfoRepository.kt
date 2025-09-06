@@ -15,4 +15,23 @@ interface UserInfoRepository {
 
     @Select("SELECT COUNT(1) FROM USER_INFO WHERE LOGIN_ID = #{loginId}")
     fun existsByLoginId(loginId: String): Int
+
+    @Select("""
+      SELECT
+        USER_SEQ as userSeq,
+        LOGIN_ID as loginId,
+        PHONE as phone,
+        LOGIN_PW as loginPw,
+        NAME as name,
+        ADDRESS as address,
+        NICKNAME as nickname,
+        CREATE_DT as createDt,
+        CREATE_USER as createUser,
+        UPDATE_DT as updateDt,
+        UPDATE_USER as updateUser
+       FROM USER_INFO
+       WHERE LOGIN_ID = #{loginId} AND DEL_YN = FALSE
+    """)
+    fun getUserLogin(@Param("loginId") loginId: String) : UserInfo?
+
 }

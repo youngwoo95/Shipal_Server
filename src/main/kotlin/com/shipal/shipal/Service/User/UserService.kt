@@ -1,9 +1,13 @@
 package com.shipal.shipal.Service.User
 
 import com.shipal.shipal.common.ResponseModel
-import com.shipal.shipal.Dto.AddUserDto
+import com.shipal.shipal.Dto.User.AddUserDto
+import com.shipal.shipal.Dto.User.LoginDto
+import com.shipal.shipal.Dto.User.ResponseTokenDto
 import com.shipal.shipal.Model.UserInfo
 import com.shipal.shipal.Repository.UserInfoRepository
+import com.shipal.shipal.Service.comm.GetTokenValues
+import com.shipal.shipal.Service.comm.JwtService
 import jakarta.transaction.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -12,7 +16,8 @@ import java.time.LocalDateTime
 @Service
 class UserService (
     private val userRepo: UserInfoRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtService: JwtService
 )
 
 {
@@ -57,6 +62,45 @@ class UserService (
         }
 
         return ResponseModel(message = "요청이 정상 처리되었습니다.", data = true, code = 200)
+    }
+
+    fun loginService(req: LoginDto) : ResponseModel<ResponseTokenDto>{
+
+        // 입력 정규화
+        val loginId = req.loginId.trim()
+        val loginPw = req.loginPw.trim()
+
+        // 사용자 조회
+        val user = userRepo.getUserLogin(loginId) ?: return ResponseModel<ResponseTokenDto>(message = "등록되지 않은 사용자입니다.", data = null, code = 400)
+
+        // 비밀번호 암호화 검증
+        val passwordChk = passwordEncoder.matches(req.loginPw, user.loginPw)
+        if(!passwordChk)
+            return ResponseModel<ResponseTokenDto>(message = "비밀번호가 일치하지 않습니다.", data = null, code =400)
+
+        val token = jwtService.generateAccessToken(
+            subject = user.loginId,
+            roles = listOf("USER"),
+            extra = mapOf(
+                "uId" to (user.userSeq ?: 0),
+                "name" to (user.name)
+            )
+        )
+
+        val body = ResponseTokenDto(
+            accessToken = token
+        )
+
+        return ResponseModel<ResponseTokenDto>(message =  "요청이 정상 처리되었습니다.", data = body, code = 200)
+
+    }
+
+    fun writePost(): ResponseModel<String>{
+        val me = GetTokenValues.get() ?: throw IllegalStateException("로그인이 필요합니다.")
+
+        val temp = "현재 로그인 사용자: ${me.uId}, ${me.name}, ${me.role}"
+
+        return ResponseModel("내용", data = temp, code = 200)
     }
 
 }
