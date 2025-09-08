@@ -34,4 +34,21 @@ interface UserInfoRepository {
     """)
     fun getUserLogin(@Param("loginId") loginId: String) : UserInfo?
 
+    @Select("""
+        SELECT
+        USER_SEQ as userSeq,
+        LOGIN_ID as loginId,
+        PHONE as phone,
+        LOGIN_PW as loginPw,
+        NAME as name,
+        ADDRESS as address,
+        NICKNAME as nickname,
+        CREATE_DT as createDt,
+        CREATE_USER as createUser,
+        UPDATE_DT as updateDt,
+        UPDATE_USER as updateUser
+       FROM USER_INFO
+       WHERE USER_SEQ = #{userSeq} AND DEL_YN = FALSE
+    """)
+    fun getUserBySeq(@Param("userSeq") userSeq: Int) : UserInfo?
 }

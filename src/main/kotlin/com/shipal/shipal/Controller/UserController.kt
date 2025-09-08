@@ -2,7 +2,9 @@ package com.shipal.shipal.Controller
 
 import com.shipal.shipal.common.ResponseModel
 import com.shipal.shipal.Dto.User.AddUserDto
+import com.shipal.shipal.Dto.User.LogOutDto
 import com.shipal.shipal.Dto.User.LoginDto
+import com.shipal.shipal.Dto.User.RefreshDto
 import com.shipal.shipal.Dto.User.ResponseTokenDto
 import com.shipal.shipal.Service.User.UserService
 import com.shipal.shipal.Service.comm.AuthUser
@@ -51,6 +53,32 @@ class UserController (
         return ResponseEntity.status(status).body(model)
     }
 
+    // 리프레쉬 토큰 발급
+    @PostMapping("/refresh")
+    fun refresh(@RequestBody req: RefreshDto): ResponseEntity<ResponseModel<ResponseTokenDto>> {
+        val model = userService.refreshService(req)
+        val status = when (model.code) {
+            200 -> HttpStatus.OK
+            400 -> HttpStatus.BAD_REQUEST
+            401 -> HttpStatus.UNAUTHORIZED
+            else -> HttpStatus.BAD_REQUEST
+        }
+        return ResponseEntity.status(status).body(model)
+    }
+
+    // 로그아웃
+    @PostMapping("/logout")
+    fun logout(@RequestBody req: LogOutDto): ResponseEntity<ResponseModel<Boolean>> {
+        val model = userService.logoutService(req)
+        val status = when (model.code) {
+            200 -> HttpStatus.OK
+            400 -> HttpStatus.BAD_REQUEST
+            else -> HttpStatus.BAD_REQUEST
+        }
+        return ResponseEntity.status(status).body(model)
+    }
+
+    /*
     @GetMapping("/test")
     fun getMyInfo(): ResponseEntity<ResponseModel<String>> {
         val model = userService.writePost()
@@ -61,7 +89,7 @@ class UserController (
         }
         return ResponseEntity.status(status).body(model)
     }
-
+*/
 
 
 

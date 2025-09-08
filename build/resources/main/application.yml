@@ -21,6 +21,16 @@ spring:
         show_sql: false
         format_sql: true
         highlight_sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: stecdev1234!
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
 logging:
   pattern:
     console: "[%d{HH:mm:ss.SSS}][%-5level][%logger.%method:line%line] - %msg%n"
@@ -33,5 +43,6 @@ jwt:
   secret: DadFufN4Oui8Bfv3ScFj6R9fyJ9hD45E6AGFsXgFsRhT4YSdSb
   issuer: shipalProject
   access-exp-minutes: 30
+
 
 
