@@ -40,6 +40,7 @@ dependencies {
 	// Spring Data Redis
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 
 }
 

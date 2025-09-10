@@ -7,8 +7,8 @@ import org.apache.ibatis.annotations.*
 interface UserInfoRepository {
 
     @Insert("""
-        INSERT INTO USER_INFO (LOGIN_ID, PHONE, LOGIN_PW, NAME, ADDRESS, NICKNAME, CREATE_DT, CREATE_USER, UPDATE_DT, UPDATE_USER)
-        VALUES (#{loginId}, #{phone}, #{loginPw}, #{name}, #{address}, #{nickname}, #{createDt}, #{createUser}, #{updateDt}, #{updateUser})
+        INSERT INTO USER_INFO (LOGIN_ID, PHONE, LOGIN_PW, NAME, ADDRESS, NICKNAME, CREATE_DT, CREATE_USER, UPDATE_DT, UPDATE_USER, ATTACH)
+        VALUES (#{loginId}, #{phone}, #{loginPw}, #{name}, #{address}, #{nickname}, #{createDt}, #{createUser}, #{updateDt}, #{updateUser}, #{attach})
     """)
     @Options(useGeneratedKeys = true, keyProperty = "userSeq")
     fun AddUserInfo(userInfo: UserInfo ): Int

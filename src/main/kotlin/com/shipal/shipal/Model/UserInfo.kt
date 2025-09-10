@@ -13,5 +13,6 @@ data class UserInfo (
     val createDt: LocalDateTime,
     val createUser: String,
     val updateDt : LocalDateTime,
-    val updateUser: String
+    val updateUser: String,
+    val attach: String?
 )

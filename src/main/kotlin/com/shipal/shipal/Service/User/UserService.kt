@@ -9,11 +9,14 @@ import com.shipal.shipal.Model.UserInfo
 import com.shipal.shipal.Repository.UserInfoRepository
 import com.shipal.shipal.Service.comm.GetTokenValues
 import com.shipal.shipal.Service.comm.JwtService
+import com.shipal.shipal.common.FileService
 import com.shipal.shipal.common.LogService
 import jakarta.transaction.Transactional
+import kotlinx.coroutines.runBlocking
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import kotlin.math.log
 
 @Service
 class UserService (
@@ -21,52 +24,91 @@ class UserService (
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
     private val redisService: com.shipal.shipal.Service.Redis.RedisService,
-    private val logService: LogService
+    private val logService: LogService,
+    private val fileService: FileService
 )
 
 {
     @Transactional
-    fun addUserService(req: AddUserDto) : ResponseModel<Boolean> {
-
-
-        val loginId = req.loginId.trim()
-        val phone = req.phone.filter { it.isDigit() } // 숫자만
-        val name = req.name.trim()
-        val address = req.address.trim()
-        val nickname = req.nickname?.trim()
-
-        if(userRepo.existsByLoginId(loginId) > 0) {
-            return ResponseModel(message = "이미 사용중인 아이디 입니다.", data = false, code = 400)
-        }
-
-        // 비밀번호 BCrypto 암호화
-        val bCrypto = passwordEncoder.encode(req.loginPw)
-
-        // 데이터베이스에 전달할 엔티티 생성
-        val now = LocalDateTime.now()
-        val userParam = UserInfo(
-            userSeq = null,
-            loginId = loginId,
-            phone = phone,
-            loginPw = bCrypto,
-            name = name,
-            address = address,
-            nickname = nickname, // 널 가능
-            createDt = now,
-            createUser = "시스템관리자",
-            updateDt = now,
-            updateUser = "시스템관리자"
-        )
-
-        // 저장
-        val affected = userRepo.AddUserInfo(userParam)
-
-        if(affected <= 0 || userParam.userSeq == null)
+    fun addUserService(req: AddUserDto) : ResponseModel<Boolean>
+    {
+        // 이미지 저장
+        var imageRelative: String? = null
+        try
         {
-            return ResponseModel(message = "잘못된 요청입니다.", data = false, code = 400)
-        }
+            val loginId = req.loginId.trim()
+            val phone = req.phone.filter { it.isDigit() } // 숫자만
+            val name = req.name.trim()
+            val address = req.address.trim()
+            val nickname = req.nickname?.trim()
 
-        return ResponseModel(message = "요청이 정상 처리되었습니다.", data = true, code = 200)
+            if(userRepo.existsByLoginId(loginId) > 0) {
+                return ResponseModel(message = "이미 사용중인 아이디 입니다.", data = false, code = 400)
+            }
+
+            // 비밀번호 BCrypto 암호화
+            val bCrypto = passwordEncoder.encode(req.loginPw)
+
+            if (req.images != null && !req.images.isEmpty) {
+                // 폴더 규칙: 날짜 기준 (원하면 VocFolder/{siteSeq} 등으로 변경)
+                val now = java.time.LocalDate.now()
+                val folder = "Images/Profile/${now.year}/%02d".format(now.monthValue)
+
+                // 화이트리스트/시그니처 검사는 FileService가 수행
+                imageRelative = runBlocking { fileService.saveImageFile(req.images, folder) }
+
+            }
+
+            // 데이터베이스에 전달할 엔티티 생성
+            val now = LocalDateTime.now()
+            val userParam = UserInfo(
+                userSeq = null,
+                loginId = loginId,
+                phone = phone,
+                loginPw = bCrypto,
+                name = name,
+                address = address,
+                nickname = nickname, // 널 가능
+                createDt = now,
+                createUser = "시스템관리자",
+                updateDt = now,
+                updateUser = "시스템관리자",
+                attach = imageRelative
+            )
+
+            // 저장
+            val affected = userRepo.AddUserInfo(userParam)
+
+            if(affected <= 0 || userParam.userSeq == null)
+            {
+                return ResponseModel(message = "잘못된 요청입니다.", data = false, code = 400)
+            }
+
+            return ResponseModel(message = "요청이 정상 처리되었습니다.", data = true, code = 200)
+        }
+        catch (ex: Exception)
+        {
+            try
+            {
+                if(imageRelative != null)
+                {
+                    val root = getFilesRoot()
+                    val full = java.nio.file.Paths.get(root).resolve(imageRelative.replace('/', java.io.File.separatorChar))
+                    java.nio.file.Files.deleteIfExists(full)
+                }
+            }
+            catch (_: Exception){}
+            logService.logMessage(ex.message.toString())
+            logService.consoleWarning(ex.toString())
+            return ResponseModel(message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500)
+        }
+    }
+
+    // 파일 루트 얻기 (WebConfig와 동일한 규칙)
+    private fun getFilesRoot(): String {
+        val envRoot = System.getProperty("fileshare.root") // 없으면 null
+        return (envRoot?.takeIf { it.isNotBlank() }
+            ?: java.nio.file.Paths.get(System.getProperty("user.dir")).resolve("FileShare").toString())
     }
 
     fun loginService(req: LoginDto) : ResponseModel<ResponseTokenDto>{

@@ -2,6 +2,7 @@ package com.shipal.shipal.Dto.User
 
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import org.springframework.web.multipart.MultipartFile
 
 data class AddUserDto (
     /*
@@ -38,4 +39,6 @@ data class AddUserDto (
 
     @field:Size(max = 255)
     val nickname: String? = null,
+
+    val images: MultipartFile? = null
 )

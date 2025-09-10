@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -24,8 +25,8 @@ class UserController (
 )
 
 {
-    @PostMapping("/addUser")
-    fun addUserInfo(@RequestBody @Valid req: AddUserDto): ResponseEntity<ResponseModel<Boolean>> {
+    @PostMapping("/addUser", consumes = ["multipart/form-data"])
+    fun addUserInfo(@ModelAttribute @Valid req: AddUserDto): ResponseEntity<ResponseModel<Boolean>> {
 
         val model = userService.addUserService(req)
 
@@ -36,7 +37,6 @@ class UserController (
             else -> HttpStatus.BAD_GATEWAY
         }
         return ResponseEntity.status(status).body(model)
-
     }
 
     @PostMapping("/login")
