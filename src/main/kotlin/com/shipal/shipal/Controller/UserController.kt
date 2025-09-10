@@ -2,7 +2,6 @@ package com.shipal.shipal.Controller
 
 import com.shipal.shipal.common.ResponseModel
 import com.shipal.shipal.Dto.User.AddUserDto
-import com.shipal.shipal.Dto.User.LogOutDto
 import com.shipal.shipal.Dto.User.LoginDto
 import com.shipal.shipal.Dto.User.RefreshDto
 import com.shipal.shipal.Dto.User.ResponseTokenDto
@@ -34,7 +33,7 @@ class UserController (
         {
             200 -> HttpStatus.OK
             400 -> HttpStatus.BAD_REQUEST
-            else -> HttpStatus.OK
+            else -> HttpStatus.BAD_GATEWAY
         }
         return ResponseEntity.status(status).body(model)
 
@@ -48,7 +47,7 @@ class UserController (
         val status = when(model.code){
             200 -> HttpStatus.OK
             400 -> HttpStatus.BAD_REQUEST
-            else -> HttpStatus.BAD_REQUEST
+            else -> HttpStatus.BAD_GATEWAY
         }
         return ResponseEntity.status(status).body(model)
     }
@@ -61,19 +60,19 @@ class UserController (
             200 -> HttpStatus.OK
             400 -> HttpStatus.BAD_REQUEST
             401 -> HttpStatus.UNAUTHORIZED
-            else -> HttpStatus.BAD_REQUEST
+            else -> HttpStatus.BAD_GATEWAY
         }
         return ResponseEntity.status(status).body(model)
     }
 
     // 로그아웃
     @PostMapping("/logout")
-    fun logout(@RequestBody req: LogOutDto): ResponseEntity<ResponseModel<Boolean>> {
-        val model = userService.logoutService(req)
+    fun logout(): ResponseEntity<ResponseModel<Boolean>> {
+        val model = userService.logoutService()
         val status = when (model.code) {
             200 -> HttpStatus.OK
             400 -> HttpStatus.BAD_REQUEST
-            else -> HttpStatus.BAD_REQUEST
+            else -> HttpStatus.BAD_GATEWAY
         }
         return ResponseEntity.status(status).body(model)
     }
