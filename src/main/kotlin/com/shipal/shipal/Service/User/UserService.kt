@@ -9,14 +9,16 @@ import com.shipal.shipal.Model.UserInfo
 import com.shipal.shipal.Repository.UserInfoRepository
 import com.shipal.shipal.Service.comm.GetTokenValues
 import com.shipal.shipal.Service.comm.JwtService
-import com.shipal.shipal.common.FileService
-import com.shipal.shipal.common.LogService
+import com.shipal.shipal.VO.UserVO
+import com.shipal.shipal.common.fileService.FileService
+import com.shipal.shipal.common.Logger.LogService
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import kotlinx.coroutines.runBlocking
+import org.apache.coyote.Response
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import kotlin.math.log
 
 @Service
 class UserService (
@@ -29,6 +31,9 @@ class UserService (
 )
 
 {
+    /*
+    * 회원가입 서비스
+    * */
     @Transactional
     fun addUserService(req: AddUserDto) : ResponseModel<Boolean>
     {
@@ -56,7 +61,6 @@ class UserService (
 
                 // 화이트리스트/시그니처 검사는 FileService가 수행
                 imageRelative = runBlocking { fileService.saveImageFile(req.images, folder) }
-
             }
 
             // 데이터베이스에 전달할 엔티티 생성
@@ -111,6 +115,11 @@ class UserService (
             ?: java.nio.file.Paths.get(System.getProperty("user.dir")).resolve("FileShare").toString())
     }
 
+
+
+    /**
+     * 로그인 서비스
+     */
     fun loginService(req: LoginDto) : ResponseModel<ResponseTokenDto>{
         try {
             // 입력 정규화
@@ -166,7 +175,9 @@ class UserService (
         }
     }
 
-    // 토큰 재발급 (Access 재발급 + Refresh 회전)
+    /**
+     * 토큰 재발급 (Access 재발급 + Refresh 회전)
+     */
     fun refreshService(req: RefreshDto): ResponseModel<ResponseTokenDto> {
         try {
             val rotated = redisService.rotateRefreshToken(req.userSeq, req.refreshToken, req.uuid)
@@ -200,7 +211,9 @@ class UserService (
         }
     }
 
-    // 로그아웃
+    /*
+     * 로그아웃
+     */
     fun logoutService(): ResponseModel<Boolean> {
         try
         {
@@ -219,14 +232,32 @@ class UserService (
         }
     }
 
-
     /*
-    fun writePost(): ResponseModel<String>{
+    * 사용자 프로필 조회
+    * */
+    fun getProfile(req: HttpServletRequest) : ResponseModel<UserVO>
+    {
+        try{
+            val getJwtToken = GetTokenValues.get() ?: throw IllegalStateException("로그인이 필요합니다.")
 
+            val userSeq : Int? = getJwtToken.uId
+            if(userSeq == null)
+                return ResponseModel(message = "잘못된 요청입니다.", data = null, code= 400)
 
-        val temp = "현재 로그인 사용자: ${me.uId}, ${me.name}, ${me.role}"
+            var model = userRepo.getUserProfile(userSeq)
+            if(model == null)
+                return ResponseModel(message =  "잘못된 요청입니다.", data = null, code =400)
 
-        return ResponseModel("내용", data = temp, code = 200)
+            model.images = fileService.toPublicUrlFromRequest(model.images, req)
+
+            return ResponseModel(message = "요청이 정상 처리되었습니다.", data = model, code= 200)
+        }
+        catch (ex: Exception)
+        {
+            logService.logMessage(ex.message.toString())
+            logService.consoleWarning(ex.toString())
+            return ResponseModel(message =  "서버에서 요청을 처리하지 못하였습니다.", data = null, code =500)
+        }
     }
-    */
+
 }

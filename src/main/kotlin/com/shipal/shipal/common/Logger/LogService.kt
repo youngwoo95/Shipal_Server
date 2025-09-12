@@ -1,4 +1,4 @@
-package com.shipal.shipal.common
+package com.shipal.shipal.common.Logger
 
 import org.springframework.stereotype.Component
 import java.io.File
@@ -29,7 +29,7 @@ class LogService {
             val logFile = File(logDir, "${dateFormat.format(now)}.txt")
 
             synchronized(lock){
-                PrintWriter(FileWriter(logFile, true)).use {writer ->
+                PrintWriter(FileWriter(logFile, true)).use { writer ->
                     writer.println("[${timeFormat.format(now)}]\t$message")
                 }
             }

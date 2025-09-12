@@ -1,31 +1,30 @@
 package com.shipal.shipal.Controller
 
-import com.shipal.shipal.common.ResponseModel
 import com.shipal.shipal.Dto.User.AddUserDto
 import com.shipal.shipal.Dto.User.LoginDto
 import com.shipal.shipal.Dto.User.RefreshDto
 import com.shipal.shipal.Dto.User.ResponseTokenDto
 import com.shipal.shipal.Service.User.UserService
-import com.shipal.shipal.Service.comm.AuthUser
+import com.shipal.shipal.VO.UserVO
+import com.shipal.shipal.common.ResponseModel
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.ModelAttribute
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1/user")
+@Tag(name = "User API", description = "회원가입 / 로그인 / 토큰")
 class UserController (
     private val userService: UserService
 )
 
 {
     @PostMapping("/addUser", consumes = ["multipart/form-data"])
+    @Tag(name = "회원가입")
     fun addUserInfo(@ModelAttribute @Valid req: AddUserDto): ResponseEntity<ResponseModel<Boolean>> {
 
         val model = userService.addUserService(req)
@@ -40,6 +39,7 @@ class UserController (
     }
 
     @PostMapping("/login")
+    @Operation(summary = "로그인")
     fun getLogin(@RequestBody req: LoginDto) : ResponseEntity<ResponseModel<ResponseTokenDto>>{
 
         val model = userService.loginService(req)
@@ -52,8 +52,11 @@ class UserController (
         return ResponseEntity.status(status).body(model)
     }
 
-    // 리프레쉬 토큰 발급
+    /*
+     *   리프레쉬 토큰 발급
+     */
     @PostMapping("/refresh")
+    @Operation(summary = "리프레쉬 토큰")
     fun refresh(@RequestBody req: RefreshDto): ResponseEntity<ResponseModel<ResponseTokenDto>> {
         val model = userService.refreshService(req)
         val status = when (model.code) {
@@ -65,7 +68,9 @@ class UserController (
         return ResponseEntity.status(status).body(model)
     }
 
-    // 로그아웃
+    /*
+     *   로그아웃
+     */
     @PostMapping("/logout")
     fun logout(): ResponseEntity<ResponseModel<Boolean>> {
         val model = userService.logoutService()
@@ -77,19 +82,16 @@ class UserController (
         return ResponseEntity.status(status).body(model)
     }
 
-    /*
-    @GetMapping("/test")
-    fun getMyInfo(): ResponseEntity<ResponseModel<String>> {
-        val model = userService.writePost()
-        val status = when (model.code) {
+    @GetMapping("/profile")
+    fun getProfile(req: HttpServletRequest): ResponseEntity<ResponseModel<UserVO>>{
+        val model = userService.getProfile(req)
+        val status = when (model.code){
             200 -> HttpStatus.OK
             400 -> HttpStatus.BAD_REQUEST
-            else -> HttpStatus.BAD_REQUEST
+            else -> HttpStatus.BAD_GATEWAY
         }
+
         return ResponseEntity.status(status).body(model)
     }
-*/
-
-
 
 }

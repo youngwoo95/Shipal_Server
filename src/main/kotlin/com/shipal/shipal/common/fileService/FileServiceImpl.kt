@@ -1,12 +1,17 @@
-package com.shipal.shipal.common
+package com.shipal.shipal.common.fileService
 
+import com.shipal.shipal.common.Logger.LogService
+import jakarta.servlet.http.HttpServletRequest
+import java.net.URLEncoder
 import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import java.io.File
 
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.Files
@@ -191,6 +196,20 @@ open class FileServiceImpl(
             log.logMessage("prepareRemove error: ${ex.message}\n$ex")
             FileReplaceWork()
         }
+    }
+
+    override fun toPublicUrlFromRequest(
+        relative: String?,
+        req: HttpServletRequest
+    ): String? {
+        if (relative.isNullOrBlank()) return null
+        val segments = relative.replace('\\','/').trimStart('/').split('/')
+        return ServletUriComponentsBuilder.fromRequest(req)
+            .replacePath(null)
+            .path("/images/")
+            .pathSegment(*segments.toTypedArray())
+            .build()
+            .toUriString()
     }
 
     private fun extOf(filename: String?): String? {

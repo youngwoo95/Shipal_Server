@@ -6,6 +6,8 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+  forward-headers-strategy: framework
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

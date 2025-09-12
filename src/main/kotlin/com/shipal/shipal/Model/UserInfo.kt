@@ -14,5 +14,5 @@ data class UserInfo (
     val createUser: String,
     val updateDt : LocalDateTime,
     val updateUser: String,
-    val attach: String?
+     var attach: String? = null
 )

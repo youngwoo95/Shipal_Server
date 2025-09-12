@@ -1,4 +1,4 @@
-package com.shipal.shipal.common
+package com.shipal.shipal.common.fileService
 
 data class FileReplaceWork (
     val newRelativePath: String? = null,

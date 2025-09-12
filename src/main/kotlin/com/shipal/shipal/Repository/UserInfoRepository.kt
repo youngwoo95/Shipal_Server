@@ -1,11 +1,15 @@
 package com.shipal.shipal.Repository
 
 import com.shipal.shipal.Model.UserInfo
+import com.shipal.shipal.VO.UserVO
 import org.apache.ibatis.annotations.*
 
 @Mapper
 interface UserInfoRepository {
 
+    /*
+    * 회원가입
+    * */
     @Insert("""
         INSERT INTO USER_INFO (LOGIN_ID, PHONE, LOGIN_PW, NAME, ADDRESS, NICKNAME, CREATE_DT, CREATE_USER, UPDATE_DT, UPDATE_USER, ATTACH)
         VALUES (#{loginId}, #{phone}, #{loginPw}, #{name}, #{address}, #{nickname}, #{createDt}, #{createUser}, #{updateDt}, #{updateUser}, #{attach})
@@ -28,11 +32,14 @@ interface UserInfoRepository {
         CREATE_DT as createDt,
         CREATE_USER as createUser,
         UPDATE_DT as updateDt,
-        UPDATE_USER as updateUser
+        UPDATE_USER as updateUser,
+        ATTACH as attach
        FROM USER_INFO
        WHERE LOGIN_ID = #{loginId} AND DEL_YN = FALSE
     """)
-    fun getUserLogin(@Param("loginId") loginId: String) : UserInfo?
+    fun getUserLogin(
+        @Param("loginId") loginId: String
+    ) : UserInfo?
 
     @Select("""
         SELECT
@@ -51,4 +58,19 @@ interface UserInfoRepository {
        WHERE USER_SEQ = #{userSeq} AND DEL_YN = FALSE
     """)
     fun getUserBySeq(@Param("userSeq") userSeq: Int) : UserInfo?
+
+    @Select("""
+        SELECT
+            ui.USER_SEQ as userSeq,
+            ui.LOGIN_ID as loginId,
+            ui.PHONE as phone,
+            ui.NAME as name,
+            ui.ADDRESS as address,
+            ui.NICKNAME as nickname,
+            ui.ATTACH as images
+        FROM USER_INFO as ui
+        WHERE ui.DEL_YN = FALSE AND ui.USER_SEQ = #{userSeq}
+    """)
+    fun getUserProfile(@Param("userSeq") userSeq: Int) : UserVO?
+
 }

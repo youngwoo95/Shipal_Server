@@ -14,6 +14,14 @@ class JwtAuthFilter(
     private val jwtService: JwtService
 ) : OncePerRequestFilter() {
 
+
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
+        val uri = request.requestURI.removePrefix(request.contextPath ?: "")
+        return uri.startsWith("/images/") ||
+                uri.startsWith("/v3/api-docs") ||
+                uri.startsWith("/swagger-ui")
+    }
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,

@@ -1,4 +1,4 @@
-package com.shipal.shipal.common
+package com.shipal.shipal.common.redis
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
