@@ -17,9 +17,15 @@ interface UserInfoRepository {
     @Options(useGeneratedKeys = true, keyProperty = "userSeq")
     fun AddUserInfo(userInfo: UserInfo ): Int
 
+    /*
+    * 회원가입 로그인 아이디 중복체크
+    * */
     @Select("SELECT COUNT(1) FROM USER_INFO WHERE LOGIN_ID = #{loginId}")
     fun existsByLoginId(loginId: String): Int
 
+    /*
+    * 로그인 확인
+    * */
     @Select("""
       SELECT
         USER_SEQ as userSeq,
@@ -37,6 +43,9 @@ interface UserInfoRepository {
         @Param("loginId") loginId: String
     ) : UserInfo?
 
+    /*
+    *  유저 테이블 조회
+    * */
     @Select("""
       SELECT
         USER_SEQ as userSeq,
@@ -54,7 +63,9 @@ interface UserInfoRepository {
         @Param("userSeq") userSeq: Int
     ) : UserInfo?
 
-
+    /*
+    * 유저 프로필 조회
+    * */
     @Select("""
         SELECT
         USER_SEQ as userSeq,
@@ -69,6 +80,9 @@ interface UserInfoRepository {
     """)
     fun getUserBySeq(@Param("userSeq") userSeq: Int) : UserInfo?
 
+    /*
+    * 유저 프로필 조회
+    * */
     @Select("""
         SELECT
             ui.USER_SEQ as userSeq,
@@ -82,7 +96,9 @@ interface UserInfoRepository {
     """)
     fun getUserProfile(@Param("userSeq") userSeq: Int) : UserVO?
 
-
+    /*
+    * 유저 PATCH 수정
+    * */
     @Update("""
         <script>
          UPDATE USER_INFO
@@ -97,5 +113,4 @@ interface UserInfoRepository {
         </script>
     """)
     fun updateUser(user: UserInfo): Int
-
 }
