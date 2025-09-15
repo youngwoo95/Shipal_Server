@@ -11,8 +11,8 @@ interface UserInfoRepository {
     * 회원가입
     * */
     @Insert("""
-        INSERT INTO USER_INFO (LOGIN_ID, PHONE, LOGIN_PW, NAME, ADDRESS, NICKNAME, CREATE_DT, CREATE_USER, UPDATE_DT, UPDATE_USER, ATTACH)
-        VALUES (#{loginId}, #{phone}, #{loginPw}, #{name}, #{address}, #{nickname}, #{createDt}, #{createUser}, #{updateDt}, #{updateUser}, #{attach})
+        INSERT INTO USER_INFO (LOGIN_ID, PHONE, LOGIN_PW, NAME, NICKNAME, CREATE_DT, ATTACH)
+        VALUES (#{loginId}, #{phone}, #{loginPw}, #{name}, #{nickname}, #{createDt}, #{attach})
     """)
     @Options(useGeneratedKeys = true, keyProperty = "userSeq")
     fun AddUserInfo(userInfo: UserInfo ): Int
@@ -27,12 +27,8 @@ interface UserInfoRepository {
         PHONE as phone,
         LOGIN_PW as loginPw,
         NAME as name,
-        ADDRESS as address,
         NICKNAME as nickname,
         CREATE_DT as createDt,
-        CREATE_USER as createUser,
-        UPDATE_DT as updateDt,
-        UPDATE_USER as updateUser,
         ATTACH as attach
        FROM USER_INFO
        WHERE LOGIN_ID = #{loginId} AND DEL_YN = FALSE
@@ -48,12 +44,8 @@ interface UserInfoRepository {
         PHONE as phone,
         LOGIN_PW as loginPw,
         NAME as name,
-        ADDRESS as address,
         NICKNAME as nickname,
         CREATE_DT as createDt,
-        CREATE_USER as createUser,
-        UPDATE_DT as updateDt,
-        UPDATE_USER as updateUser,
         ATTACH as attach
        FROM USER_INFO
        WHERE USER_SEQ = #{userSeq} AND DEL_YN = FALSE
@@ -70,12 +62,8 @@ interface UserInfoRepository {
         PHONE as phone,
         LOGIN_PW as loginPw,
         NAME as name,
-        ADDRESS as address,
         NICKNAME as nickname,
-        CREATE_DT as createDt,
-        CREATE_USER as createUser,
-        UPDATE_DT as updateDt,
-        UPDATE_USER as updateUser
+        CREATE_DT as createDt
        FROM USER_INFO
        WHERE USER_SEQ = #{userSeq} AND DEL_YN = FALSE
     """)
@@ -87,7 +75,6 @@ interface UserInfoRepository {
             ui.LOGIN_ID as loginId,
             ui.PHONE as phone,
             ui.NAME as name,
-            ui.ADDRESS as address,
             ui.NICKNAME as nickname,
             ui.ATTACH as images
         FROM USER_INFO as ui
@@ -105,8 +92,6 @@ interface UserInfoRepository {
             <if test="phone != null">       PHONE = #{phone},</if>
             <if test="nickname != null">    NICKNAME = #{nickname},</if>
             <if test="attach != null">      ATTACH = #{attach},</if>
-            UPDATE_DT = #{updateDt},
-            UPDATE_USER = #{updateUser}
           </set>
         WHERE USER_SEQ = #{userSeq}
         </script>

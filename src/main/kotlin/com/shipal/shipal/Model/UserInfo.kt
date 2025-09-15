@@ -8,11 +8,7 @@ data class UserInfo (
     var phone: String,
     var loginPw: String,
     var name: String,
-    var address: String,
     var nickname: String? = null,
     var createDt: LocalDateTime,
-    var createUser: String,
-    var updateDt : LocalDateTime,
-    var updateUser: String,
     var attach: String? = null
 )

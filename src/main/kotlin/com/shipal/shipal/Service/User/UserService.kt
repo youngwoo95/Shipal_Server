@@ -84,7 +84,6 @@ class UserService (
             if(dto.nickname != null)
                 user.nickname = dto.nickname
 
-
             /*  파일로직  */
             var imgWork = FileReplaceWork()
             val newFile = dto.images
@@ -107,9 +106,6 @@ class UserService (
                 user.attach = imgWork.newRelativePath
             }
 
-            val now = LocalDateTime.now()
-            user.updateDt = now
-            user.updateUser = "시스템관리자"
 
             val rows = userRepo.updateUser(user)
             if (rows <= 0) {
@@ -156,7 +152,6 @@ class UserService (
             val loginId = req.loginId.trim()
             val phone = req.phone.filter { it.isDigit() } // 숫자만
             val name = req.name.trim()
-            val address = req.address.trim()
             val nickname = req.nickname?.trim()
 
             if(userRepo.existsByLoginId(loginId) > 0) {
@@ -183,12 +178,8 @@ class UserService (
                 phone = phone,
                 loginPw = bCrypto,
                 name = name,
-                address = address,
                 nickname = nickname, // 널 가능
                 createDt = now,
-                createUser = "시스템관리자",
-                updateDt = now,
-                updateUser = "시스템관리자",
                 attach = imageRelative
             )
 

@@ -33,9 +33,6 @@ data class AddUserDto (
     @field:Size(max = 50)
     val name: String,
 
-    @field:NotBlank
-    @field:Size(max = 255)
-    val address: String,
 
     @field:Size(max = 255)
     val nickname: String? = null,

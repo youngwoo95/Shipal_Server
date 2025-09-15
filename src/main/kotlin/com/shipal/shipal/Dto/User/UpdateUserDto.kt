@@ -26,11 +26,6 @@ data class UpdateUserDto (
     @field:Size(max = 50)
     val name: String?,
 
-    /**
-     * 주소
-     */
-    @field:Size(max = 255)
-    var address: String?,
 
     @field:Size(max = 255)
     val nickname: String? = null,
