@@ -2,19 +2,16 @@ package com.shipal.shipal.common.fileService
 
 import com.shipal.shipal.common.Logger.LogService
 import jakarta.servlet.http.HttpServletRequest
-import java.net.URLEncoder
-import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import java.io.File
-
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.nio.file.Files
 import java.security.SecureRandom
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -36,40 +33,48 @@ open class FileServiceImpl(
         base
     }
 
-    private val allowedImageExts = setOf(".jpg", ".jpeg", ".png", ".gif")
+    private val allowedImageExts = setOf(".jpg", ".jpeg", ".png", ".gif",".webp")
     private val allowedDocExts = setOf(".pdf", ".xlsx", ".xls", ".csv", ".docx", ".pptx", ".txt", ".zip")
 
     private val tsFmt = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")
     private val rand = SecureRandom()
 
-    override suspend fun saveImageFile(image: MultipartFile, folderName: String): String? {
+    override fun saveImageFile(image: MultipartFile, folderName: String): String? {
         try {
             if (image.isEmpty) return null
             val ext = extOf(image.originalFilename) ?: return null
             if (ext !in allowedImageExts) return null
 
             val safeFolder = normalizeFolder(folderName) ?: return null
-
-            val safeBase  = sanitizeBaseName(baseNameOf(image.originalFilename))
-            val timestamp = LocalDateTime.now().format(tsFmt)
-            val suffix    = randomSuffix(8)
-            val saveName  = "${timestamp}_${suffix}_${safeBase}${ext.lowercase()}"
+            val safeBase   = sanitizeBaseName(baseNameOf(image.originalFilename))
+            val timestamp  = LocalDateTime.now().format(tsFmt)
+            val suffix     = randomSuffix(8)
+            val saveName   = "${timestamp}_${suffix}_${safeBase}${ext.lowercase()}"
 
             val relative = "$safeFolder/$saveName".replace('\\', '/')
             val dir  = imageRootDir.resolve(safeFolder)
             Files.createDirectories(dir)
             val full = dir.resolve(saveName).toFile()
 
+            // 1) 형식 검사
             image.inputStream.use { s -> if (!isAllowedImage(s, ext)) return null }
+
+            // 2) 저장 (gif/webp 원본 복사, jpg/png 재인코딩)
             image.inputStream.use { s ->
-                if (ext.equals(".gif", true)) {
-                    // GIF는 원본 보존
-                    s.copyTo(FileOutputStream(full))
-                } else {
-                    // JPEG/PNG 재인코딩(메타 미보존 효과)
-                    reencodeImage(s, full, ext)
+                when {
+                    ext.equals(".gif", true) || ext.equals(".webp", true) -> {
+                        writeAtomic(full) { t ->
+                            FileOutputStream(t).use { fos -> s.copyTo(fos) }
+                        }
+                    }
+                    else -> {
+                        writeAtomic(full) { t ->
+                            reencodeImage(s, t, ext)
+                        }
+                    }
                 }
             }
+
             return relative
         } catch (ex: Exception) {
             log.logMessage("saveImageFile error: ${ex.message}\n$ex")
@@ -77,7 +82,7 @@ open class FileServiceImpl(
         }
     }
 
-    override suspend fun saveFile(file: MultipartFile, folderName: String): String? {
+    override fun saveFile(file: MultipartFile, folderName: String): String? {
         try {
             if (file.isEmpty) return null
             val ext = extOf(file.originalFilename) ?: return null
@@ -87,11 +92,10 @@ open class FileServiceImpl(
             if (!isImage && !isDoc) return null
 
             val safeFolder = normalizeFolder(folderName) ?: return null
-
-            val base      = sanitizeBaseName(baseNameOf(file.originalFilename))
-            val ts        = LocalDateTime.now().format(tsFmt)
-            val rnd       = randomSuffix(8)
-            val saveName  = "${ts}_${rnd}_${base}${ext.lowercase()}"
+            val base       = sanitizeBaseName(baseNameOf(file.originalFilename))
+            val ts         = LocalDateTime.now().format(tsFmt)
+            val rnd        = randomSuffix(8)
+            val saveName   = "${ts}_${rnd}_${base}${ext.lowercase()}"
 
             val relative = "$safeFolder/$saveName".replace('\\', '/')
             val dir  = imageRootDir.resolve(safeFolder)
@@ -99,18 +103,33 @@ open class FileServiceImpl(
             val full = dir.resolve(saveName).toFile()
 
             if (isImage) {
+                // 형식 검사
                 file.inputStream.use { s -> if (!isAllowedImage(s, ext)) return null }
+                // 저장
                 file.inputStream.use { s ->
-                    if (ext.equals(".gif", true)) {
-                        s.copyTo(FileOutputStream(full))
-                    } else {
-                        reencodeImage(s, full, ext)
+                    when {
+                        ext.equals(".gif", true) || ext.equals(".webp", true) -> {
+                            writeAtomic(full) { t ->
+                                FileOutputStream(t).use { fos -> s.copyTo(fos) }
+                            }
+                        }
+                        else -> {
+                            writeAtomic(full) { t ->
+                                reencodeImage(s, t, ext)
+                            }
+                        }
                     }
                 }
             } else {
+                // 문서 시그니처 검사
                 file.inputStream.use { s -> if (!isAllowedDocument(s, ext)) return null }
-                file.inputStream.use { s -> s.copyTo(FileOutputStream(full)) }
+                file.inputStream.use { s ->
+                    writeAtomic(full) { t ->
+                        FileOutputStream(t).use { fos -> s.copyTo(fos) }
+                    }
+                }
             }
+
             return relative
         } catch (ex: Exception) {
             log.logMessage("saveFile error: ${ex.message}\n$ex")
@@ -118,7 +137,7 @@ open class FileServiceImpl(
         }
     }
 
-    override suspend fun prepareReplaceImage(
+    override fun prepareReplaceImage(
         newImage: MultipartFile?,
         folderName: String,
         oldRelativePath: String?
@@ -135,10 +154,11 @@ open class FileServiceImpl(
 
                 FileReplaceWork(
                     newRelativePath = newRel,
-                    commitAsync = {
+                    // 동기식이나 기존 시그니처 유지
+                    commit = {
                         try { if (oldFull != null && oldFull.exists()) oldFull.delete() } catch (_: Exception) {}
                     },
-                    rollbackAsync = {
+                    rollback = {
                         try { if (newFull.exists()) newFull.delete() } catch (_: Exception) {}
                     }
                 )
@@ -149,7 +169,7 @@ open class FileServiceImpl(
         }
     }
 
-    override suspend fun prepareReplaceFile(
+    override fun prepareReplaceFile(
         newFile: MultipartFile?,
         folderName: String,
         oldRelativePath: String?
@@ -166,10 +186,10 @@ open class FileServiceImpl(
 
                 FileReplaceWork(
                     newRelativePath = newRel,
-                    commitAsync = {
+                    commit = {
                         try { if (oldFull != null && oldFull.exists()) oldFull.delete() } catch (_: Exception) {}
                     },
-                    rollbackAsync = {
+                    rollback = {
                         try { if (newFull.exists()) newFull.delete() } catch (_: Exception) {}
                     }
                 )
@@ -180,7 +200,7 @@ open class FileServiceImpl(
         }
     }
 
-    override suspend fun prepareRemove(oldRelativePath: String?): FileReplaceWork {
+    override fun prepareRemove(oldRelativePath: String?): FileReplaceWork {
         return try {
             if (oldRelativePath.isNullOrBlank()) {
                 FileReplaceWork()
@@ -188,8 +208,8 @@ open class FileServiceImpl(
                 val oldFull = imageRootDir.resolve(oldRelativePath.replace('/', File.separatorChar)).toFile()
                 FileReplaceWork(
                     newRelativePath = null,
-                    commitAsync = { try { if (oldFull.exists()) oldFull.delete() } catch (_: Exception) {} },
-                    rollbackAsync = {}
+                    commit = { try { if (oldFull.exists()) oldFull.delete() } catch (_: Exception) {} },
+                    rollback = {}
                 )
             }
         } catch (ex: Exception) {
@@ -198,10 +218,7 @@ open class FileServiceImpl(
         }
     }
 
-    override fun toPublicUrlFromRequest(
-        relative: String?,
-        req: HttpServletRequest
-    ): String? {
+    override fun toPublicUrlFromRequest(relative: String?, req: HttpServletRequest): String? {
         if (relative.isNullOrBlank()) return null
         val segments = relative.replace('\\','/').trimStart('/').split('/')
         return ServletUriComponentsBuilder.fromRequest(req)
@@ -210,6 +227,20 @@ open class FileServiceImpl(
             .pathSegment(*segments.toTypedArray())
             .build()
             .toUriString()
+    }
+
+    // -------------------- Helpers --------------------
+
+    private fun writeAtomic(target: File, writer: (File) -> Unit) {
+        val tmp = File(target.parentFile, target.name + ".tmp")
+        writer(tmp)
+        try {
+            // 가능하면 원자 이동
+            Files.move(tmp.toPath(), target.toPath(), java.nio.file.StandardCopyOption.ATOMIC_MOVE)
+        } catch (_: Exception) {
+            // 파일시스템이 ATOMIC_MOVE 미지원이면 대체
+            Files.move(tmp.toPath(), target.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        }
     }
 
     private fun extOf(filename: String?): String? {
@@ -239,9 +270,8 @@ open class FileServiceImpl(
     }
 
     private fun sanitizeBaseName(name: String): String {
-        val cleaned = name.filter { it.isLetterOrDigit() || it == '-' || it == '_' || it == '.' }
+        return name.filter { it.isLetterOrDigit() || it == '-' || it == '_' || it == '.' }
             .take(60).ifBlank { "noname" }
-        return cleaned
     }
 
     private fun randomSuffix(n: Int): String {
@@ -250,25 +280,30 @@ open class FileServiceImpl(
     }
 
     private fun isAllowedImage(s: InputStream, ext: String): Boolean {
-        val header = ByteArray(16)
+        // WebP 판별 위해 12바이트까지 읽음 (RIFF....WEBP)
+        val header = ByteArray(12)
         val read = s.read(header)
-        val isJpeg = read >= 2 && header[0] == 0xFF.toByte() && header[1] == 0xD8.toByte()
-        val isPng = read >= 8 && header[0] == 0x89.toByte() && header[1] == 0x50.toByte() &&
+        val isJpeg = read >= 2  && header[0] == 0xFF.toByte() && header[1] == 0xD8.toByte()
+        val isPng  = read >= 8  && header[0] == 0x89.toByte() && header[1] == 0x50.toByte() &&
                 header[2] == 0x4E.toByte() && header[3] == 0x47.toByte() &&
                 header[4] == 0x0D.toByte() && header[5] == 0x0A.toByte() &&
                 header[6] == 0x1A.toByte() && header[7] == 0x0A.toByte()
-        val isGif = read >= 4 && header[0] == 0x47.toByte() && header[1] == 0x49.toByte() &&
+        val isGif  = read >= 4  && header[0] == 0x47.toByte() && header[1] == 0x49.toByte() &&
                 header[2] == 0x46.toByte() && header[3] == 0x38.toByte()
+        val isWebp = read >= 12 && header[0] == 'R'.code.toByte() && header[1] == 'I'.code.toByte() &&
+                header[2] == 'F'.code.toByte() && header[3] == 'F'.code.toByte() &&
+                header[8] == 'W'.code.toByte() && header[9] == 'E'.code.toByte() &&
+                header[10] == 'B'.code.toByte() && header[11] == 'P'.code.toByte()
 
         return when (ext.lowercase()) {
             ".jpg", ".jpeg" -> isJpeg
-            ".png" -> isPng
-            ".gif" -> isGif
-            else -> false
+            ".png"          -> isPng
+            ".gif"          -> isGif
+            ".webp"         -> isWebp
+            else            -> false
         }
     }
 
-    /** 문서류 매직넘버 검사 */
     private fun isAllowedDocument(s: InputStream, ext: String): Boolean {
         val header = ByteArray(8)
         val read = s.read(header)
@@ -282,34 +317,36 @@ open class FileServiceImpl(
                 header[6] == 0x1A.toByte() && header[7] == 0xE1.toByte() // .xls OLE
 
         return when (ext.lowercase()) {
-            ".pdf" -> isPdf
-            ".xlsx", ".docx", ".pptx", ".zip" -> isZip // OOXML은 zip
-            ".xls" -> isOle
-            ".csv", ".txt" -> true
-            else -> false
+            ".pdf"                      -> isPdf
+            ".xlsx", ".docx", ".pptx",
+            ".zip"                      -> isZip
+            ".xls"                      -> isOle
+            ".csv", ".txt"              -> true  // 필요 시 MIME 검증/강제 다운로드 권장
+            else                        -> false
         }
     }
 
-    /** JPEG/PNG 재인코딩 (EXIF 등 메타 미보존 효과) */
+    /** JPEG/PNG 재인코딩 (EXIF 등 메타 미보존 효과). 웹브라우저 호환 위해 jpg/png만 처리 */
     private fun reencodeImage(inStream: InputStream, outFile: File, ext: String) {
         val img = ImageIO.read(inStream) ?: throw IllegalArgumentException("Invalid image")
         val format = if (ext.equals(".png", true)) "png" else "jpg"
 
         if (format == "jpg") {
             val writers = ImageIO.getImageWritersByFormatName("jpg")
+            require(writers.hasNext()) { "No JPEG writer available" }
             val writer = writers.next()
             FileOutputStream(outFile).use { fos ->
-                val ios: ImageOutputStream = ImageIO.createImageOutputStream(fos)
-                writer.output = ios
-                val param = writer.defaultWriteParam
-                if (param.canWriteCompressed()) {
-                    param.compressionMode = ImageWriteParam.MODE_EXPLICIT
-                    param.compressionQuality = 0.9f // 품질 90
+                ImageIO.createImageOutputStream(fos).use { ios: ImageOutputStream ->
+                    writer.output = ios
+                    val param = writer.defaultWriteParam
+                    if (param.canWriteCompressed()) {
+                        param.compressionMode = ImageWriteParam.MODE_EXPLICIT
+                        param.compressionQuality = 0.9f
+                    }
+                    writer.write(null, IIOImage(img, null, null), param)
                 }
-                writer.write(null, IIOImage(img, null, null), param)
-                writer.dispose()
-                ios.close()
             }
+            writer.dispose()
         } else {
             ImageIO.write(img, "png", outFile)
         }

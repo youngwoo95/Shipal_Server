@@ -41,7 +41,7 @@ class RedisConfig {
     @Bean
     fun stringRedisTemplate(connectionFactory: RedisConnectionFactory): StringRedisTemplate =
         StringRedisTemplate(connectionFactory).apply {
-            setEnableTransactionSupport(true) // 트랜잭션 지원 ON
+            setEnableTransactionSupport(false) // 트랜잭션 지원 ON
         }
 
 }

@@ -4,14 +4,17 @@ import com.shipal.shipal.Dto.User.AddUserDto
 import com.shipal.shipal.Dto.User.LoginDto
 import com.shipal.shipal.Dto.User.RefreshDto
 import com.shipal.shipal.Dto.User.ResponseTokenDto
+import com.shipal.shipal.Dto.User.UpdateUserDto
 import com.shipal.shipal.Service.User.UserService
 import com.shipal.shipal.VO.UserVO
 import com.shipal.shipal.common.ResponseModel
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -23,6 +26,9 @@ class UserController (
 )
 
 {
+    /*
+    * 회원가입
+    * */
     @PostMapping("/addUser", consumes = ["multipart/form-data"])
     @Tag(name = "회원가입")
     fun addUserInfo(@ModelAttribute @Valid req: AddUserDto): ResponseEntity<ResponseModel<Boolean>> {
@@ -38,8 +44,29 @@ class UserController (
         return ResponseEntity.status(status).body(model)
     }
 
-    @PostMapping("/login")
+    @RequestMapping(value = ["/updateUser"],method = [RequestMethod.PATCH],consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @Tag(name = "회원정보 수정")
+     fun updateUserInfo(@ModelAttribute @Valid dto: UpdateUserDto, req: HttpServletRequest): ResponseEntity<ResponseModel<Boolean>> {
+
+        val model =  userService.updateUserService(dto,req)
+
+        val status = when (model.code)
+        {
+            200 -> HttpStatus.OK
+            400 -> HttpStatus.BAD_REQUEST
+            else -> HttpStatus.BAD_GATEWAY
+        }
+        return ResponseEntity.status(status).body(model)
+    }
+
+
     @Operation(summary = "로그인")
+    @RequestMapping(
+        value = ["/login"],
+        method = [RequestMethod.POST],
+        consumes = [MediaType.APPLICATION_JSON_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
     fun getLogin(@RequestBody req: LoginDto) : ResponseEntity<ResponseModel<ResponseTokenDto>>{
 
         val model = userService.loginService(req)

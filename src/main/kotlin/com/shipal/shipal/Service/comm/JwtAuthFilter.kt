@@ -19,7 +19,8 @@ class JwtAuthFilter(
         val uri = request.requestURI.removePrefix(request.contextPath ?: "")
         return uri.startsWith("/images/") ||
                 uri.startsWith("/v3/api-docs") ||
-                uri.startsWith("/swagger-ui")
+                uri.startsWith("/swagger-ui") ||
+                uri.startsWith("/images/")
     }
 
     override fun doFilterInternal(

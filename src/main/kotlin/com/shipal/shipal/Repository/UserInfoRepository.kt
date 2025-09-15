@@ -42,6 +42,28 @@ interface UserInfoRepository {
     ) : UserInfo?
 
     @Select("""
+      SELECT
+        USER_SEQ as userSeq,
+        LOGIN_ID as loginId,
+        PHONE as phone,
+        LOGIN_PW as loginPw,
+        NAME as name,
+        ADDRESS as address,
+        NICKNAME as nickname,
+        CREATE_DT as createDt,
+        CREATE_USER as createUser,
+        UPDATE_DT as updateDt,
+        UPDATE_USER as updateUser,
+        ATTACH as attach
+       FROM USER_INFO
+       WHERE USER_SEQ = #{userSeq} AND DEL_YN = FALSE
+    """)
+    fun getUserInfo(
+        @Param("userSeq") userSeq: Int
+    ) : UserInfo?
+
+
+    @Select("""
         SELECT
         USER_SEQ as userSeq,
         LOGIN_ID as loginId,
@@ -72,5 +94,23 @@ interface UserInfoRepository {
         WHERE ui.DEL_YN = FALSE AND ui.USER_SEQ = #{userSeq}
     """)
     fun getUserProfile(@Param("userSeq") userSeq: Int) : UserVO?
+
+
+    @Update("""
+        <script>
+         UPDATE USER_INFO
+         <set>
+            <if test="name != null">        NAME = #{name},</if>
+            <if test="loginPw != null">     LOGIN_PW = #{loginPw},</if>
+            <if test="phone != null">       PHONE = #{phone},</if>
+            <if test="nickname != null">    NICKNAME = #{nickname},</if>
+            <if test="attach != null">      ATTACH = #{attach},</if>
+            UPDATE_DT = #{updateDt},
+            UPDATE_USER = #{updateUser}
+          </set>
+        WHERE USER_SEQ = #{userSeq}
+        </script>
+    """)
+    fun updateUser(user: UserInfo): Int
 
 }

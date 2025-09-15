@@ -5,14 +5,14 @@ import java.time.LocalDateTime
 data class UserInfo (
     var userSeq: Int? = null,
     val loginId: String,
-    val phone: String,
-    val loginPw: String,
-    val name: String,
-    val address: String,
-    val nickname: String? = null,
-    val createDt: LocalDateTime,
-    val createUser: String,
-    val updateDt : LocalDateTime,
-    val updateUser: String,
-     var attach: String? = null
+    var phone: String,
+    var loginPw: String,
+    var name: String,
+    var address: String,
+    var nickname: String? = null,
+    var createDt: LocalDateTime,
+    var createUser: String,
+    var updateDt : LocalDateTime,
+    var updateUser: String,
+    var attach: String? = null
 )
