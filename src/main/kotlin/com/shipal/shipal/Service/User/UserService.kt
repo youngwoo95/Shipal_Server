@@ -218,8 +218,6 @@ class UserService (
             ?: java.nio.file.Paths.get(System.getProperty("user.dir")).resolve("FileShare").toString())
     }
 
-
-
     /**
      * 로그인 서비스
      */

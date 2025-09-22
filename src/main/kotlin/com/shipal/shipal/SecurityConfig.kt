@@ -36,7 +36,7 @@ class SecurityConfig(
                 it.requestMatchers("/api/v1/user/login").permitAll()
 
                 it.requestMatchers(HttpMethod.PATCH, "/api/v1/user/updateUser").authenticated()
-
+                it.requestMatchers(HttpMethod.POST, "/api/v1/post/addPost").permitAll() // ← 임시로 열기
                 // 그 외 요청은 인증 필요
                 it.anyRequest().authenticated()
             }

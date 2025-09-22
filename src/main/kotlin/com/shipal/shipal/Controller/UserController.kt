@@ -25,7 +25,7 @@ class UserController (
     * 회원가입
     * */
     @PostMapping("/addUser", consumes = ["multipart/form-data"])
-    @Tag(name = "회원가입")
+    @Operation(summary = "회원가입")
     fun addUserInfo(@ModelAttribute @Valid req: AddUserDto): ResponseEntity<ResponseModel<Boolean>> {
 
         val model = userService.addUserService(req)
@@ -40,7 +40,7 @@ class UserController (
     }
 
     @RequestMapping(value = ["/updateUser"],method = [RequestMethod.PATCH],consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    @Tag(name = "회원정보 수정")
+    @Operation(summary = "회원정보 수정")
      fun updateUserInfo(@ModelAttribute @Valid dto: UpdateUserDto, req: HttpServletRequest): ResponseEntity<ResponseModel<Boolean>> {
 
         val model =  userService.updateUserService(dto,req)

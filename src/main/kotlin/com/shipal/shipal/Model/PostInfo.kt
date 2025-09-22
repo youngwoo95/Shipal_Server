@@ -36,6 +36,7 @@ data class PostInfo (
 
     var createDt: LocalDateTime,
 
-
+    /* 첨부파일 */
+    var attach: List<String>? = null
 
 )
